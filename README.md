@@ -1,2 +1,39 @@
 # THU-eReserves-Crawler
-从清华大学电子教学参考书服务平台爬取指定的电子教参。
+
+从清华大学电子教学参考书服务平台爬取指定的电子教参，以 jpg 格式保存到本地。
+
+## 使用说明
+
+### 1. 配置 `config.json` 文件
+
+登录[清华大学电子教学参考书服务平台](https://ereserves.lib.tsinghua.edu.cn/)，点击需要爬取的书籍主页。
+
+`F12` 打开开发者工具，切换到网络标签页并刷新页面。
+
+找到 `access` 请求，将请求标头中的 `Jcclient` 字段复制到 `config.json` 文件的对应位置。
+
+再将 `Referer` 字段中 `bookDetail/` 之后的编号复制到 `config.json` 中的 `bookId` 中。
+
+![bookDetail](/img/bookDetail.jpg)
+
+点击“立即阅读”，`F12` 打开开发者工具，切换到网络标签页并刷新页面。
+
+找到 `selectJgpBookChapters` 请求，将请求标头中的 `Botureadkernel` 字段复制到 `config.json` 文件的对应位置。
+
+![Botureadkernel](/img/readKernel.jpg)
+
+### 2. 运行脚本
+
+确保安装所有依赖后运行脚本。
+
+```
+python THU-eReserves-Crawler.py
+```
+
+脚本会自动爬取该书籍的每一页，并以 jpg 格式保存到当前目录下的 `{title}` 文件夹中。原书名中含有的非法文件名字符，会在保存路径中被替换为 `.` 。
+
+## LISENCE
+
+本仓库的内容采用 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) 许可协议。您可以自由使用、修改、分发和创作衍生作品，只要署名原作者，并以相同的授权协议共享衍生作品。
+
+如果您认为文档的部分内容侵犯了您的合法权益，请联系项目维护者，我们会尽快删除相关内容。
