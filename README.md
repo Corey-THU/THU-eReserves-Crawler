@@ -1,6 +1,6 @@
 # THU-eReserves-Crawler
 
-从清华大学电子教学参考书服务平台爬取指定的电子教参，以 jpg 格式保存到本地。
+从清华大学电子教学参考书服务平台爬取指定的电子教参，将指定范围页码的页面以 jpg 格式保存到本地。
 
 ## 使用说明
 
@@ -21,6 +21,8 @@
 找到 `selectJgpBookChapters` 请求，将请求标头中的 `Botureadkernel` 字段复制到 `config.json` 文件的对应位置。
 
 ![Botureadkernel](/img/readKernel.jpg)
+
+`config.json` 中的 `start` 项为起始页码（含）； `end` 项为终止页码（含），若到最后一页终止可设置为 `-1` 。
 
 ### 2. 运行脚本
 
