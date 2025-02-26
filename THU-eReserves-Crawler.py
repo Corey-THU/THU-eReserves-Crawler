@@ -22,11 +22,11 @@ except:
     print('Failed to load config.json. Please check the file.')
     sys.exit()
     
-num      = 0
-flag     = False
-cookie   = 'BotuReadKernel=' + BotuReadKernel
-url      = 'https://ereserves.lib.tsinghua.edu.cn'
-headers  = {
+num     = 0
+flag    = False
+cookie  = 'BotuReadKernel=' + BotuReadKernel
+url     = 'https://ereserves.lib.tsinghua.edu.cn'
+headers = {
     'botureadkernel': BotuReadKernel,
     'cookie'        : cookie,
     'jcclient'      : jcclient,
@@ -45,37 +45,34 @@ if not flag:
     print(f'The source of {title} is not 数字资源平台.')
     sys.exit()
 print(f'Downloading {title}...')
-sleep(random.uniform(0.5, 1.5))
 
 # selectJgpBookChapters
 readurl  = source['READURL']
 url      = url + '/readkernel'
 title    = re.sub(r'[\\/:*?"<>|]', '.', title)
 data     = {'SCANID': BeautifulSoup(requests.get(f'{url}/ReadJPG/JPGJsNetPage/{readurl}', headers=headers).text, 'lxml').find('input', {'name': 'scanid'}).get('value')}
-sleep(random.uniform(0.5, 1.5))
 chapters = json.loads(requests.post(f'{url}/KernelAPI/BookInfo/selectJgpBookChapters', headers=headers, data=data).text)['data']
 pdf      = FPDF()
-flag     = False
 
 # selectJgpBookChapter
 for chapter in chapters:
-    sleep(random.uniform(0.5, 1.5))
+    flag = False
     data = {'EMID': chapter['EMID'], 'BOOKID': readurl}
-    # retry 5 times if failed
-    for i in range(6):
+    # retry 3 times if failed
+    for i in range(4):
         response = requests.post(f'{url}/KernelAPI/BookInfo/selectJgpBookChapter', headers=headers, data=data)
         if response.status_code == 200:
             response = response.json()
             if response['code'] != 1:
                 print(f'Failed to get chapter "{chapter["EFRAGMENTNAME"]}". Info: {response['info']}.')
                 sys.exit()
+            flag = True
             break
         else:
-            if i != 5:
-                sleep(random.uniform(2*i+1, 4*i+2))
-            else:
-                print(f'Failed to get chapter "{chapter['EFRAGMENTNAME']}". Please retry later.')
-                sys.exit()
+            sleep(random.uniform(2*i+1, 4*i+2))
+    if not flag:
+        print(f'Failed to get chapter "{chapter['EFRAGMENTNAME']}". Please retry later.')
+        sys.exit()
     response = response['data']['JGPS']
     # download JPG files and add to PDF
     for item in response:
@@ -83,26 +80,28 @@ for chapter in chapters:
         if num < start:
             continue
         if end != -1 and num > end:
-            flag = True
-            break
-        sleep(random.uniform(1, 2))
-        # retry 5 times if failed
-        for i in range(6):
+            pdf.output(f'{title}.pdf')
+            print(f'Finished downloading {title}.pdf.')
+            sys.exit()
+        sleep(random.uniform(0.2, 0.5))
+        # retry 3 times if failed
+        for i in range(4):
             page = requests.get(f'{url}/JPGFile/DownJPGJsNetPage?filePath={item['hfsKey']}', headers=headers)
             if page.status_code == 200:
                 img = Image.open(BytesIO(page.content))
                 width, height = img.size
                 pdf.add_page(format=(width*25.4/72, height*25.4/72))
                 pdf.image(BytesIO(page.content), x=0, y=0, w=width*25.4/72, h=height*25.4/72)
+                if flag:
+                    pdf.start_section(name=chapter['EFRAGMENTNAME'], level=0)
+                    flag = False
                 break
             else:
-                if i != 5:
+                if i != 3:
                     sleep(random.uniform(2*i+1, 4*i+2))
                 else:
                     print(f'Failed to download page {num}.')
                     pdf.add_page(format=(width*25.4/72, height*25.4/72))
-    if flag:
-        break
 
 pdf.output(f'{title}.pdf')
 print(f'Finished downloading {title}.pdf.')
